@@ -1,0 +1,84 @@
+<div class="webrtc-wrapper">
+	<div id="videoPlayer"></div>
+
+	<div class="status styled-wrapper pull-left">
+		<h4>Status</h4>
+		<span id="status">Disconnected</span>
+	</div>
+
+	<div class="form-wrapper styled-wrapper pull-left">
+		<form class="form-horizontal" id="form_init">
+        	<div>
+            	<h4>Credentials</h4>
+            	<div class="control-group">
+                	<label class="control-label" for="private_identity">Private Identity</label>
+                	<div class="controls">
+                    	<input type="text" name="privateIdentity" id="private_identity" value="user_6gv067"></input>
+                	</div>
+            	</div>
+            	<div class="control-group">
+                	<label class="control-label" for="public_identity">Public Identity</label>
+                	<div class="controls">
+                    	<input type="text" name="publicIdentity" id="public_identity" value="sip:user_6gv067@webdev.realm"></input>
+                	</div>
+            	</div>
+            	<div class="control-group">
+                	<label class="control-label" for="password">Password</label>
+                	<div class="controls">
+                    	<input type="text" name="password" id="password" value="6wfpblen7me9"></input>
+                	</div>
+            	</div>
+            	<div class="control-group">
+                	<label class="control-label" for="realm">Realm</label>
+                	<div class="controls">
+                    	<input type="text" name="realm" id="realm" value="webdev.realm"></input>
+                	</div>
+            	</div>
+			</div>
+		</form>
+		<button class="btn btn-info" id="login">Login</button>
+		<button class="btn btn-danger" id="logout" style="display: none;">Logout</button>
+	</div>
+
+	<div class="call-container pull-left">
+		<div class="logged-wrapper styled-wrapper" style="display: none;">
+			<h4>Place a call</h4>
+
+			<div class="call-wrapper">
+				<input type="text" id="destination" placeholder="sip:2222@webdev.realm"></input>
+				<button class="btn btn-success" id="call">Call</button>
+			</div>
+		</div>
+
+		<div class="oncall-wrapper styled-wrapper" style="display: none;">
+			<h4>On Call</h4>
+
+			<button class="btn btn-danger" id="hangup">Hangup</button>
+
+			<div id="dialpad">
+				<table>
+					<tr>
+						<td><input type="button" value="1"/></td>
+						<td><input type="button" value="2"/></td>
+						<td><input type="button" value="3"/></td>
+					</tr>
+					<tr>
+						<td><input type="button" value="4"/></td>
+						<td><input type="button" value="5"/></td>
+						<td><input type="button" value="6"/></td>
+					</tr>
+					<tr>
+						<td><input type="button" value="7"/></td>
+						<td><input type="button" value="8"/></td>
+						<td><input type="button" value="9"/></td>
+					</tr>
+					<tr>
+						<td><input type="button" value="*"/></td>
+						<td><input type="button" value="0"/></td>
+						<td><input type="button" value="#"/></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>

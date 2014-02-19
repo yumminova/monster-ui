@@ -1,0 +1,39 @@
+.webrtc-wrapper {
+}
+
+.webrtc-wrapper audio,
+.webrtc-wrapper video {
+	border: 1px solid #22ccff;
+	margin: 10px;
+	padding: 10px;
+}
+
+.webrtc-wrapper #dialpad {
+	width: 150px;
+}
+.webrtc-wrapper #dialpad tr{
+	margin: 5px;
+	width: 100%;
+}
+.webrtc-wrapper #dialpad tr td{
+	width: 33.33333%;
+}
+
+.webrtc-wrapper #dialpad tr td input{
+	border: 1px solid #333;
+	color: #333;
+}
+
+.webrtc-wrapper .styled-wrapper {
+	border: 1px solid #22CCFF;
+	margin: 10px;
+	padding: 10px;
+}
+
+.webrtc-wrapper .call-wrapper input{
+	margin: 0 5px 0 0;
+}
+
+.webrtc-wrapper button {
+	margin-right: 5px;
+}

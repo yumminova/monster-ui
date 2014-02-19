@@ -1,0 +1,231 @@
+<div>
+<h2>Demonstration and testing of <a href="index.html">Flash-VideoIO</a></h2>
+<script src="js/lib/AC_OETags.js" language="javascript"></script>
+<script type="text/javascript">
+	function getFlashMovie(movieName) {
+    	var isIE = navigator.appName.indexOf("Microsoft") != -1;
+    	return (isIE) ? window[movieName] : document[movieName];
+	}
+
+	function isEnter(e) {
+		var key = e.keyCode || e.which;
+		return (key == 13);
+	}
+
+	function setString(propertyName, inputName) {
+    	var obj = getFlashMovie("video1");
+    	obj.setProperty(propertyName, document.getElementById(inputName).value);
+    	return false;
+	}
+
+	function setBool(propertyName, inputName) {
+    	var obj = getFlashMovie("video1");
+    	obj.setProperty(propertyName, document.getElementById(inputName).checked);
+	}
+
+	function setNumber(propertyName, inputName) {
+    	var obj = getFlashMovie("video1");
+    	obj.setProperty(propertyName, parseFloat(document.getElementById(inputName).value));
+    	return false;
+	}
+
+	function str2object(value) {
+  	  if (value == "true")
+     	 return true;
+  	  else if (value == "false")
+     	 return false;
+  	  else if (value.length >= 2 && value[0] == '"' && value[value.length-1] == '"')
+     	 return value.substr(1, value.length-2);
+  	  else
+     	 parseFloat(value);
+	}
+
+	function callMethod(inputName) {
+    	var obj = getFlashMovie("video1");
+    	value = document.getElementById(inputName).value;
+    	r = /^(\w+)\((true|false|[\.\d]+|"[^"]*")?((\s*,\s*(true|false|[\.\d]+|"[^"]*"))*)\)$/g;
+    	m = r.exec(value);
+    	if (!m) {
+    		alert("Invalid method call: " + value);
+    	}
+    	else {
+        	var methodName = m[1];
+        	var arg0 = m[2];
+        	var remaining = m[3];
+        	var args = [methodName];
+        	if (arg0) {
+            	args.push(str2object(arg0));
+        	}
+        	while (remaining) {
+	        	r1 = /^\s*,\s*(true|false|[\.\d]+|"[^"]*")/;
+	        	m1 = r1.exec(remaining);
+	        	if (m1) {
+	            	args.push(str2object(m1[1]));
+	            	remaining = remaining.substr(m1[0].length);
+	        	}
+        	}
+
+        	var f = obj.callProperty;
+        	f.apply(obj, args);
+    	}
+    	return false;
+	}
+
+	function log(msg) {
+    	var logObj = document.getElementById("log");
+    	logObj.value = msg + (logObj.value ? "\n" + logObj.value : "");
+	}
+
+	function onCreationComplete(event) {
+    	log(event.objectID + " created");
+
+    	var obj = getFlashMovie("video1");
+    	var props = {
+        	'preload':'boolean','autoplay':'boolean','loop':'boolean','controls':'boolean',
+        	'url':'string','play':'string','publish':'string','group':'string',
+        	'record':'boolean','recordMode':'string','playMode':'string',
+					'live':'boolean','playing':'boolean','recording':'boolean','bidirection':'boolean',
+        	'microphone':'boolean','codec':'string','encodeQuality':'number', 'rate':'number',
+        	'framesPerPacket':'number','gain':'number','level':'number',
+        	'echoSuppression':'boolean', 'silenceLevel':'number', 'echoCancel':'boolean',
+        	'sound':'boolean','volume':'number',
+        	'camera':'boolean','cameraLoopback':'boolean','videoCodec':'string',
+        	'cameraWidth':'number','cameraHeight':'number',
+        	'cameraFPS':'number','keyFrameInterval':'number','cameraQuality':'number',
+					'cameraName':'string','microphoneName':'string',
+        	'privacyEvent':'boolean','deviceAllowed':'boolean', 'detectActivity':'boolean',
+        	'display':'boolean','videoWidth':'number','videoHeight':'number','currentFPS':'number',
+        	'cameraBandwidth':'number','mirrored':'boolean','zoom':'string','smoothing':'boolean',
+        	'enableFullscreen':'boolean','fullscreen':'boolean','enableFullscreenOnDoubleClick':'boolean',
+        	'currentTime':'number','duration':'number','bytesLoaded':'number','bytesTotal':'number','playerState':'string',
+        	'quality':'number', 'bandwidth':'number', 'bufferTime':'number', 'bufferTimeMax':'number'
+    	};
+    	for (var name in props) {
+        	var type = props[name];
+        	var comp = document.getElementById(name);
+        	if (type == "number")
+            	comp.value = obj.getProperty(name).toString();
+        	else if (type == "boolean")
+            	comp.checked = obj.getProperty(name);
+        	else
+            	comp.value = obj.getProperty(name);
+    	}
+	}
+
+	function onPropertyChange(event) {
+    	var obj = document.getElementById(event.property);
+    	if (obj) {
+        	if (typeof(event.newValue) == "boolean")
+            	obj.checked = event.newValue;
+        	else if (typeof(event.newValue) == "number")
+            	obj.value = event.newValue.toString();
+        	else
+            	obj.value = event.newValue != null ? event.newValue : "";
+    	}
+    	else {
+        	log(event.objectID + "." + event.property + "=" + event.oldValue + "=>" + event.newValue);
+    	}
+	}
+
+	function onCallback(event) {
+    	log("onCallback() method=" + event.method + ", args=" + event.args);
+	}
+
+	function onPostingNotify(event) {
+    	log("onPostingNotify() user=" + event.user + ", text=" + event.text);
+	}
+
+	function onReceiveData(event) {
+    	log("onReceiveData() data=" + event.data);
+	}
+
+	function onShowingSettings(event) {
+		log("onShowingSettings() showing=" + event.showing);
+	}
+
+	function help(name) {
+    	var obj = getFlashMovie("video1");
+    	if (obj) {
+        	data = obj.getProperty('__doc__' + name);
+        	log(data);
+        	var regexp = /(http|https|rtmp|rtmfp):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/g;
+        	var match = data.match(regexp);
+        	html = "";
+        	for (var i in match) {
+            	var inputName = 'text1', propName = 'src';
+            	if (match[i].indexOf('.jpg') >= 0) {
+                	inputName = 'poster';
+                	propName = 'poster';
+            	}
+            	html += '<a href="#" onclick="javascript:document.getElementById(\'' + inputName + '\').value=\'' + match[i] + '\'; setString(\'' + propName + '\', \'' + inputName + '\');">' + match[i] + '</a><br/>';
+        	}
+        	document.getElementById('urls').innerHTML = html;
+    	}
+	}
+
+</script>
+
+	<div id="videoPlayer" style="left: 10px; top: 50px; position: absolute">
+
+		<script language="JavaScript" type="text/javascript">
+			var hasProductInstall = DetectFlashVer(6, 0, 65),
+			    hasVersion10 = DetectFlashVer(10, 0, 0),
+			    hasVersion10_3 = DetectFlashVer(10, 3, 0),
+			    hasVersion11 = DetectFlashVer(11, 0, 0);
+
+			if (hasProductInstall && !hasVersion10) {
+				var MMPlayerType = (isIE == true) ? "ActiveX" : "PlugIn";
+				var MMredirectURL = window.location;
+	    		document.title = document.title.slice(0, 47) + " - Flash Player Installation";
+	    		var MMdoctitle = document.title;
+
+				document.getElementById('videoPlayer').innerHTML = AC_FL_RunContent(
+					"src", "playerProductInstall",
+					"FlashVars", "MMredirectURL="+MMredirectURL+'&MMplayerType='+MMPlayerType+'&MMdoctitle='+MMdoctitle+"",
+					"width", "320",
+					"height", "240",
+					"align", "middle",
+					"id", "video1",
+					"quality", "high",
+					"bgcolor", "#000000",
+					"name", "video1",
+					"allowScriptAccess","always",
+					"type", "application/x-shockwave-flash",
+					"pluginspage", "http://www.adobe.com/go/getflashplayer"
+				);
+			}
+			else if (hasVersion10) {
+				document.getElementById('videoPlayer').innerHTML = AC_FL_RunContent(
+						"src", "js/lib/VideoIO11",
+						"width", "320",
+						"height", "240",
+						"align", "middle",
+						"id", "video1",
+						"quality", "high",
+						"bgcolor", "#000000",
+						"name", "video1",
+						"allowScriptAccess","always",
+						"allowFullScreen","true",
+						"type", "application/x-shockwave-flash",
+						"pluginspage", "http://www.adobe.com/go/getflashplayer"
+				);
+	  		}
+	  		else {
+	    		var alternateContent = 'This content requires the Adobe Flash Player. '
+	   			+ '<a href=http://www.adobe.com/go/getflash/>Get Flash</a>';
+	    		document.write(alternateContent);
+	  		}
+		</script>
+	</div>
+
+	<div style="left: 10px; top: 300px; width: 650px; height: 300px; position: absolute;">
+    	<form autocomplete="off">
+        	<textarea id="log" style="height: 100%" cols="80" readonly></textarea>
+    	</form>
+	</div>
+
+	<div style="position: absolute; top: 600px;">
+    	&copy; 2010-2011, <a href="http://kundansingh.com">Kundan Singh</a>.
+    	All Rights Reserved.
+	</div>
+</div>
