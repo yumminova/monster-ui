@@ -163,6 +163,9 @@
 			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/vmboxes/{voicemailId}' },
 			'list': { verb: 'GET', url: 'accounts/{accountId}/vmboxes' }
 		},
+		fax: {
+			getAttachment: { verb: 'GET', url: 'accounts/{accountId}/faxes/incoming/{faxId}/attachment', type: 'image/tiff' }
+		},
 		faxbox: {
 			'get': { verb: 'GET', url: 'accounts/{accountId}/faxboxes/{faxboxId}' },
 			'create': { verb: 'PUT', url: 'accounts/{accountId}/faxboxes/' },
