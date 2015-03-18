@@ -90,8 +90,7 @@
 		"twoWayCalling": "Unlimited Two-way Trunks",
 		"updateLimits": "Update Limits",
 		"helpTwoway": "The number of Two-way trunks defines how many concurrent calls your platform can handle at one time.",
-		"helpInbound": "The number of Outbound trunks defines how many simultaneous calls you can receive to your phone system.",
-		"__comment": " IS THE ABOVE ERROR IN THE SOFTWARE OR IN THIS TRANSLATION/////////////////// HELP INBOUND OUTBOUND TRUNKS??",
+		"helpInbound": "The number of Inbound trunks defines how many simultaneous calls you can receive to your phone system.",
 		"monthlyCharges": "Monthly Charges",
 		"__comment": "UI-664: Adding the real twoway sliders",
 		"__version": "v3.19_s2",
@@ -198,7 +197,7 @@
 		"monthlyChargesTitle": "Monthly Charges",
 		"declined": "Declined",
 
-		"database_rollup": "Database Rollup",
+		"database_rollup": "Balance Carry-over",
 		"per_minute_call": "Per-Minute Call",
 		"sub_account_per_minute_call": "Per-Minute Call (Sub-Account)",
 		"feature_activation": "Feature Activation",
@@ -215,6 +214,35 @@
 		"__version": "v3.20_s1",
 		"startDate": "Start Date",
 		"endDate": "End Date",
-		"total": "Total"
+		"total": "Total",
+
+		"__comment": "UI-1248: Work on transactions to fix the way they're displayed",
+		"__version": "3.19",
+		"refundText": "(Refund)",
+		"codes": {
+			"1001": "Per Minute Call",
+			"1002": "Sub-Account Per Minute Call",
+			"2001": "Feature Activation",
+			"2002": "Sub-Account Feature Activation",
+			"2003": "Number Activation",
+			"2004": "Sub-Account Number Activation",
+			"3001": "Manual Addition",
+			"3002": "Sub-Account Manual Addition",
+			"3003": "Auto-Addition",
+			"3004": "Sub-Account Auto-Addition",
+			"3005": "Admin Discretion",
+			"3006": "Top Up",
+			"4000": "Balance Carry-over",
+			"5000": "Recurring",
+			"5001": "Monthly Recurring",
+			"5002": "Monthly Recurring (Pro-rated)",
+			"9999": "Unknown Refund",
+			"0": "Unknown"
+		},
+		"errorStatuses": {
+			"voided": "Voided",
+			"declined": "Declined",
+			"processor_declined": "Declined"
+		}
 	}
 }

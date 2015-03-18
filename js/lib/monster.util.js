@@ -7,15 +7,15 @@ define(function(require){
 	var util = {
 
 		/*
-			This function will automatically logout the user after %wait% minutes (defaults to 15).
+			This function will automatically logout the user after %wait% minutes (defaults to 30).
 		   	This function will show a warning popup %alertBeforeLogout% minutes before logging out (defaults to 2). If the user moves his cursor, the timer will reset.
 		*/
 		autoLogout: function() {
-			if(!monster.config.hasOwnProperty('logoutTimer') || monster.config.logoutTimer > 0) {
+			if(!monster.config.whitelabel.hasOwnProperty('logoutTimer') || monster.config.whitelabel.logoutTimer > 0) {
 				var i18n = monster.apps['core'].i18n.active(),
 					timerAlert,
 					timerLogout,
-					wait = monster.config.logoutTimer || 30,
+					wait = monster.config.whitelabel.logoutTimer || 30,
 					alertBeforeLogout = 2,
 					alertTriggered = false,
 					alertDialog,
@@ -319,7 +319,9 @@ define(function(require){
 
 		// Not Intended to be used by most developers for now, we need to use it to have a standard transaction formatter.
 		// The input needed is an object from the array of transaction returned by the /transactions API.
-		formatTransaction: function(transaction, isProrated, app) {
+		formatTransaction: function(transaction, app) {
+			transaction.isARefund = false;
+
 			// If transaction has accounts/discounts and if at least one of these properties is not empty, run this code
 			if(transaction.hasOwnProperty('metadata') && transaction.metadata.hasOwnProperty('add_ons') && transaction.metadata.hasOwnProperty('discounts') 
 				&& !(transaction.metadata.add_ons.length === 0 && transaction.metadata.discounts.length === 0)) {
@@ -329,7 +331,7 @@ define(function(require){
 					mapDiscounts[discount.id] = discount;
 				});
 
-				transaction.type = isProrated ? 'prorated' : 'monthly';
+				transaction.type = 'monthly';
 				transaction.services = [];
 
 				$.each(transaction.metadata.add_ons, function(k, addOn) {
@@ -365,12 +367,34 @@ define(function(require){
 
 			transaction.amount = parseFloat(transaction.amount).toFixed(2);
 
-			// If there are no processor response text, we assume it was approved
-			transaction.approved = transaction.hasOwnProperty('processor_response_text') ? transaction.processor_response_text === 'Approved' : true,
+
+			if(transaction.hasOwnProperty('code')) {
+				if(transaction.code % 1000 < 500) {
+					transaction.friendlyName = app.i18n.active().transactions.codes[transaction.code];
+				}
+				else {
+					transaction.isARefund = true;
+
+					if(transaction.code === 9999) {
+						transaction.friendlyName = app.i18n.active().transactions.codes[transaction.code];
+					}
+					else {
+						transaction.friendlyName = app.i18n.active().transactions.codes[transaction.code - 500] + ' ' + app.i18n.active().transactions.refundText;
+					}
+				}
+			}
+			
+			// If status is missing or among the following list, the transaction is approved
+			transaction.approved = !transaction.hasOwnProperty('status') || ['authorized','settled','settlement_confirmed'].indexOf(transaction.status) >= 0;
+
+			if(!transaction.approved) {
+				transaction.errorMessage = transaction.status in app.i18n.active().transactions.errorStatuses ? app.i18n.active().transactions.errorStatuses[transaction.status] : transaction.status;
+			}
+
 			// Our API return created but braintree returns created_at
 			transaction.created = transaction.created_at || transaction.created; 
 
-			transaction.friendlyCreated = monster.util.toFriendlyDate(transaction.created, 'short');
+			transaction.friendlyCreated = monster.util.toFriendlyDate(transaction.created, 'MM/DD/year hh:mm:ss');
 
 			return transaction;
 		},

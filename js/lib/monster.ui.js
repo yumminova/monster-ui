@@ -121,6 +121,32 @@ define(function(require){
 		});
 	});
 
+	Handlebars.registerHelper('monsterCheckbox', function() {
+		var templateData = {
+			cssClass: 'monster-checkbox',
+			checkbox: new Handlebars.SafeString(arguments[arguments.length-1].fn(this))
+		};
+
+		for(var i=0; i<arguments.length-1; i++) {
+			if(_.isString(arguments[i])) {
+				switch(arguments[i]) {
+					case 'large-checkbox':
+					case 'checkbox-large':
+						templateData.cssClass = 'monster-checkbox-large';
+						break;
+					case 'prepend-label':
+						templateData.prepend = true;
+						break;
+					default:
+						templateData.label = arguments[i];
+						break;
+				}
+			}
+		}
+
+		return monster.template(monster.apps.core, 'monster-checkbox-template', templateData);
+	});
+
 	$.widget("ui.dialog", $.extend({}, $.ui.dialog.prototype, {
 		_title: function(title) {
 			if (!this.options.title ) {
@@ -287,16 +313,16 @@ define(function(require){
 						renderData = [];
 
 					$.each(data, function(categoryName, category) {
-						if (categoryName != 'activation_charges' && categoryName != 'activation_charges_description') {
+						if (categoryName != 'activation_charges') {
 							$.each(category, function(itemName, item) {
 								var discount = item.single_discount_rate + (item.cumulative_discount_rate * item.cumulative_discount),
 									monthlyCharges = parseFloat(((item.rate * item.quantity) - discount) || 0).toFixed(2);
 								if(monthlyCharges > 0) {
 									renderData.push({
-										service: i18n.services[itemName],
-										rate: item.rate || 0,
+										service: i18n.services.hasOwnProperty(itemName) ? i18n.services[itemName] : itemName.replace(/_/, ' '),
+										rate: item.rate.toFixed(2) || 0,
 										quantity: item.quantity || 0,
-										discount: discount > 0 ? parseFloat(discount).toFixed(2) : '',
+										discount: discount > 0 ? parseFloat(discount).toFixed(2) : 0,
 										monthlyCharges: monthlyCharges
 									});
 
@@ -308,11 +334,9 @@ define(function(require){
 
 					return renderData;
 				},
-				charges = data.hasOwnProperty('activation_charges') ? data.activation_charges : false,
-				description = typeof data.activation_charges_description === 'string' ? data.activation_charges_description : false,
+				charges = data.activation_charges ? data.activation_charges.toFixed(2) : 0,
 				template = $(monster.template(coreApp, 'dialog-charges', {
 						activation_charges: charges,
-						activation_charges_description: description,
 						charges: formatData(data)
 					}
 				)),
@@ -403,9 +427,6 @@ define(function(require){
 						sPaginationType: 'full_numbers',
 						aaData: data || {},
 						aoColumns: columns,
-						bScrollInfinite: true,
-						bScrollCollapse: true,
-						sScrollY: '300px',
 						oLanguage: {
 							sEmptyTable: i18n.table.empty,
 							sProcessing: i18n.table.processing,
@@ -423,49 +444,48 @@ define(function(require){
 							}
 						}
 					},
-					options = $.extend(true, {}, defaultOptions, options);
+					options = $.extend(true, {}, defaultOptions, options),
+					applyFunctions = function applyFunctions(table) {
+						table.addData = function(data) {
+							var self = this;
+
+							self.fnAddData(data);
+						};
+
+						table.destroy = function() {
+							var self = this;
+
+							self.fnDestroy();
+
+							monster.ui.table[self.name] = null;
+						};
+					},
+					applyModifications = function applyModifications(table) {
+						var search_wrapper = table.parents('.dataTables_wrapper').find('.dataTables_filter');
+							search = search_wrapper.find('input[type="text"]'),
+							btn_search = '',//<input class="submit-search" type="image" src="img/search_left.png">';
+							btn_cancel = '',//<input class="cancel-search" type="image" src="img/search_right.png">';
+							i18n = monster.apps['core'].i18n.active();
+
+						search.attr('placeholder', i18n.table.search);
+
+						search_wrapper.contents().filter(function() {
+							return this.nodeType == Node.TEXT_NODE;
+						}).remove();
+
+						// This is backwards because of the float right
+						search.before(btn_cancel);
+						search.after(btn_search);
+					};
+
 
 				tableObj = element.dataTable(options);
 				tableObj.name = name;;
 
-				self.applyFunctions(tableObj);
-				self.applyModifications(tableObj);
+				applyFunctions(tableObj);
+				applyModifications(tableObj);
 
 				self[name] = tableObj;
-			},
-
-			applyFunctions: function(table) {
-				table.addData = function(data) {
-					var self = this;
-
-					self.fnAddData(data);
-				};
-
-				table.destroy = function() {
-					var self = this;
-
-					self.fnDestroy();
-
-					monster.ui.table[self.name] = null;
-				};
-			},
-
-			applyModifications: function(table) {
-				var search_wrapper = table.parents('.dataTables_wrapper').find('.dataTables_filter');
-					search = search_wrapper.find('input[type="text"]'),
-					btn_search = '',//<input class="submit-search" type="image" src="img/search_left.png">';
-					btn_cancel = '',//<input class="cancel-search" type="image" src="img/search_right.png">';
-					i18n = monster.apps['core'].i18n.active();
-
-				search.attr('placeholder', i18n.table.search);
-
-				search_wrapper.contents().filter(function() {
-					return this.nodeType == Node.TEXT_NODE;
-				}).remove();
-
-				// This is backwards because of the float right
-				search.before(btn_cancel);
-				search.after(btn_search);
 			}
 		},
 
@@ -1121,13 +1141,7 @@ define(function(require){
 				coreApp = monster.apps.core,
 				unselectedItems = (function findUnselectedItems(items, selectedItems) {
 					var selectedKeys = selectedItems.map(function(item) { return item.key; }),
-						unselectedItems = [];
-
-					for (var i = 0, len = items.length; i < len; i++) {
-						if (selectedKeys.indexOf(items[i].key) === -1) {
-							unselectedItems.push(items[i]);
-						}
-					}
+						unselectedItems = items.filter(function(item) { return selectedKeys.indexOf(item.id) < 0; });
 
 					return unselectedItems;
 				})(items, selectedItems),

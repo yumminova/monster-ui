@@ -78,7 +78,8 @@ define(function(require){
 					inbound_cnam: { icon: 'icon-green icon-user feature-inbound_cnam', help: self.i18n.active().numbers.cnamInboundIconHelp },
 					dash_e911: { icon: 'icon-red icon-ambulance feature-dash_e911', help: self.i18n.active().numbers.e911IconHelp },
 					local: { icon: 'icon-purple icon-rocket feature-local', help: self.i18n.active().numbers.localIconHelp },
-					port: { icon: 'icon-phone icon-yellow feature-port' }
+					port: { icon: 'icon-phone icon-yellow feature-port' },
+					prepend: { icon: 'icon-orange icon-file-text-alt feature-prepend', help: self.i18n.active().numbers.prependIconHelp }
 				};
 
 			if(callback) {
@@ -141,7 +142,7 @@ define(function(require){
 			var sortByDate = function(a,b) {
 					return a.updated > b.updated ? -1 : 1;
 				},
-			    sortByName = function(a,b) {
+				sortByName = function(a,b) {
 					return a.phoneNumber > b.phoneNumber;
 				};
 
@@ -186,7 +187,7 @@ define(function(require){
 						self.numbersList(accountId, function(numbers) {
 							var spareNumbers = [],
 								usedNumbers = [],
-			    				sortByName = function(a,b) {
+								sortByName = function(a,b) {
 									return a.phoneNumber > b.phoneNumber;
 								};
 
@@ -362,6 +363,22 @@ define(function(require){
 						}
 					}
 				});
+			});
+
+			function syncNumbers (accountId) {
+				self.numbersSyncUsedBy(accountId, function(numbers) {
+					displayNumberList(accountId, function(numbers) {
+						toastr.success(self.i18n.active().numbers.sync.success);
+					}, true);
+				});
+			};
+
+			parent.on('click', '.account-header .action-number.sync', function(e) {
+				syncNumbers($(this).parents('.account-section').data('id'));
+			});
+
+			parent.on('click', '.actions-wrapper .action-number.sync', function(e) {
+				syncNumbers(self.accountId);
 			});
 
 			/* Add class selected when you click on a number box, check/uncheck  the account checkbox if all/no numbers are checked */
@@ -754,6 +771,28 @@ define(function(require){
 				}
 			});
 
+			parent.on('click', '.prepend-number', function() {
+				var prependCell = $(this).parents('.number-box').first(),
+					phoneNumber = prependCell.data('phonenumber');
+
+				if(phoneNumber) {
+					var args = {
+						phoneNumber: phoneNumber,
+						callbacks: {
+							success: function(data) {
+								if('prepend' in data.data && data.data.prepend.enabled) {
+									prependCell.find('.features i.feature-prepend').addClass('active');
+								} else {
+									prependCell.find('.features i.feature-prepend').removeClass('active');
+								}
+							}
+						}
+					};
+
+					monster.pub('common.numberPrepend.renderPopup', args);
+				}
+			});
+
 			var searchListNumbers = function(searchString, parent) {
 				var viewList = parent;
 
@@ -908,7 +947,7 @@ define(function(require){
 		},
 
 		/* AccountID and Callback in args */
-		numbersFormatDialogSpare: function(data) {
+		numbersFormatDialogSpare: function(data, ignoreNumbers, extraNumbers) {
 			var self = this,
 				formattedData = {
 					accountName: data.accountName,
@@ -920,7 +959,7 @@ define(function(require){
 				};
 
 			_.each(data.numbers, function(number, id) {
-				if(number.used_by === '') {
+				if((number.used_by === '' || extraNumbers.indexOf(id) >= 0) && ignoreNumbers.indexOf(id) === -1) {
 					number.phoneNumber = id;
 					number = self.numbersFormatNumber(number);
 
@@ -938,35 +977,38 @@ define(function(require){
 			var self = this,
 				accountId = args.accountId,
 				accountName = args.accountName || '',
+				ignoreNumbers = args.ignoreNumbers || [],
+				extraNumbers = args.extraNumbers || [],
 				callback = args.callback;
 
 			self.numbersList(accountId, function(data) {
 				data.accountName = accountName;
 
-				var formattedData = self.numbersFormatDialogSpare(data),
-				    spareTemplate = $(monster.template(self, 'numbers-dialogSpare', formattedData));
+				var formattedData = self.numbersFormatDialogSpare(data, ignoreNumbers, extraNumbers),
+					spareTemplate = $(monster.template(self, 'numbers-dialogSpare', formattedData));
 
-                spareTemplate.find('.empty-search-row').hide();
+				spareTemplate.find('.empty-search-row').hide();
 
 				spareTemplate.on('keyup', '.search-query', function() {
-                	var rows = spareTemplate.find('.number-box'),
-                    	emptySearch = spareTemplate.find('.empty-search-row'),
-                    	currentRow;
+					var rows = spareTemplate.find('.number-box'),
+						emptySearch = spareTemplate.find('.empty-search-row'),
+						currentRow;
 
-                	currentNumberSearch = $(this).val().toLowerCase();
+					currentNumberSearch = $(this).val().toLowerCase();
 
-                	_.each(rows, function(row) {
-                    	currentRow = $(row);
-                    	currentRow.data('search').toLowerCase().indexOf(currentNumberSearch) < 0 ? currentRow.hide() : currentRow.show();
-                	});
+					_.each(rows, function(row) {
+						currentRow = $(row);
+						currentRow.data('search').toLowerCase().indexOf(currentNumberSearch) < 0 ? currentRow.hide() : currentRow.show();
+					});
 
-                	if(rows.size() > 0) {
-                    	rows.is(':visible') ? emptySearch.hide() : emptySearch.show();
-                	}
-            	});
+					if(rows.size() > 0) {
+						rows.is(':visible') ? emptySearch.hide() : emptySearch.show();
+					}
+				});
 
 				spareTemplate.find('#proceed').on('click', function() {
 					var selectedNumbersRow = spareTemplate.find('.number-box.selected'),
+						remainingQuantity = formattedData.sortedNumbers.length - selectedNumbersRow.length,
 						selectedNumbers = [];
 
 					_.each(selectedNumbersRow, function(row) {
@@ -976,7 +1018,7 @@ define(function(require){
 					});
 
 					if(selectedNumbers.length > 0) {
-						args.callback && args.callback(selectedNumbers);
+						args.callback && args.callback(selectedNumbers, remainingQuantity);
 
 						popup.dialog('close').remove();
 					}
@@ -985,7 +1027,7 @@ define(function(require){
 					}
 				});
 
-				spareTemplate.find('.number-box').on('click', function(event) {
+				spareTemplate.find('.number-box:not(.no-data)').on('click', function(event) {
 					var $this = $(this);
 
 					$this.toggleClass('selected');
@@ -1082,6 +1124,20 @@ define(function(require){
 			});
 
 			return data;
+		},
+
+		numbersSyncUsedBy: function(accountId, callback) {
+			var self = this;
+
+			self.callApi({
+				resource: 'numbers.sync',
+				data: {
+					accountId: accountId
+				},
+				success: function(numbers) {
+					callback && callback(numbers.data);
+				}
+			});
 		},
 
 		numbersListUsers: function(accountId, callback) {

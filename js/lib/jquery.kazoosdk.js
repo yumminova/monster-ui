@@ -103,6 +103,10 @@
 			'listAssigned': { verb: 'GET', url: 'accounts/{accountId}/ips/assigned' },
 			'listZones': { verb: 'GET', url: 'accounts/{accountId}/ips/zones' }
 		},
+		inspector: {
+			'get': { verb: 'GET', url: 'accounts/{accountId}/call_inspector/{callId}' },
+			'list': { verb: 'GET', url: 'accounts/{accountId}/call_inspector' }
+		},
 		user: {
 			'get': { verb: 'GET', url: 'accounts/{accountId}/users/{userId}' },
 			'create': { verb: 'PUT', url: 'accounts/{accountId}/users' },
@@ -128,6 +132,18 @@
 			'searchByNameAndNumber': { verb: 'GET', url: 'accounts/{accountId}/search?t=callflow&q=name_and_number&v={value}'},
 			'searchByNumber': { verb: 'GET', url: 'accounts/{accountId}/search?t=callflow&q=number&v={value}'}
 		},
+		clickToCall: {
+			'create': { verb: 'PUT', url: 'accounts/{accountId}/clicktocall' },
+			'get': { verb: 'GET',  url: 'accounts/{accountId}/clicktocall/{clickToCallId}' },
+			'update': { verb: 'GET', url: 'accounts/{accountId}/clicktocall/{clickToCallId}' },
+			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/clicktocall/{clickToCallId}' },
+			'list': { verb: 'GET', url: 'accounts/{accountId}/clicktocall' },
+			'connect': { verb: 'POST', url: 'accounts/{accountId}/clicktocall/{clickToCallId}/connect' }
+		},
+		pivot: {
+			'listDebug': { verb: 'GET', url: 'accounts/{accountId}/pivot/debug' },
+			'getDebug': { verb: 'GET', url: 'accounts/{accountId}/pivot/debug/{callId}' }
+		},
 		cdrs: {
 			'get': { verb: 'GET', url: 'accounts/{accountId}/cdrs/{cdrId}' },
 			'list': { verb: 'GET', url: 'accounts/{accountId}/cdrs' }
@@ -145,7 +161,8 @@
 			'matchClassifier': { verb: 'GET', url: 'accounts/{accountId}/phone_numbers/classifiers/{phoneNumber}' },
 			'search': { verb: 'GET', url: 'phone_numbers?prefix={pattern}&quantity={limit}&offset={offset}' },
 			'searchBlocks': { verb: 'GET', url: 'phone_numbers?prefix={pattern}&quantity={size}&offset={offset}&blocks={limit}' },
-			'searchCity': { verb: 'GET', url: 'phone_numbers/prefix?city={city}' }
+			'searchCity': { verb: 'GET', url: 'phone_numbers/prefix?city={city}' },
+			'sync': { verb: 'POST', url: 'accounts/{accountId}/phone_numbers/fix' }
 		},
 		device: {
 			'get': { verb: 'GET', url: 'accounts/{accountId}/devices/{deviceId}' },
@@ -240,6 +257,9 @@
 			'deleteAttachment': { verb: 'DELETE', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments/{documentName}', type: 'application/pdf' },
 			'changeState': { verb: 'POST', url: 'accounts/{accountId}/port_requests/{portRequestId}/{state}' }
 		},
+		registrations: {
+			'list': { verb: 'GET', url: 'accounts/{accountId}/registrations' }
+		},
 		webhooks: {
 			'get': { 'verb': 'GET', 'url': 'accounts/{accountId}/webhooks/{webhookId}' },
 			'create': { 'verb': 'PUT', 'url': 'accounts/{accountId}/webhooks' },
@@ -312,7 +332,10 @@
 
 						if('filters' in methodSettings) {
 							$.each(methodSettings.filters, function(filterKey, filterValue) {
-								requestSettings.url += (requestSettings.url.indexOf('?') > 0 ? '&' : '?') + filterKey + '=' + filterValue;
+								var valueArray = [].concat(filterValue);
+								$.each(valueArray, function(key, value) {
+									requestSettings.url += (requestSettings.url.indexOf('?') > 0 ? '&' : '?') + filterKey + '=' + value;
+								});
 							});
 						}
 

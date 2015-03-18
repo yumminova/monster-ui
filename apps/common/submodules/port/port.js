@@ -847,7 +847,9 @@ define(function(require){
 					}
 				},
 				function(err, results) {
-					var requests = results.descendants;
+					var requests = results.descendants.sort(function(a, b) {
+							return a.account_name.toLowerCase() > b.account_name.toLowerCase() ? 1 : -1;
+						});
 
 					if (results.requests.length) {
 						requests.unshift({
@@ -1031,19 +1033,17 @@ define(function(require){
 					data = data.data;
 
 					var carriersList = [],
-						formattedData = { orders: [] },
-						errorCount = 0;
+						formattedData = { orders: [] };
 
 					for (var number in data) {
 						if (data[number].company == null || data[number].company == 'undefined' || data[number].company == "") {
-							errorCount++;
-							delete data[number];
-							continue;
+							data[number].company = self.i18n.active().port.unknownCarrier;
 						}
-						carriersList.push(data[number].company);
-					}
 
-					carriersList = _.uniq(carriersList);
+						if (carriersList.indexOf(data[number].company) === -1) {
+							carriersList.push(data[number].company);
+						}
+					}
 
 					for (var carrier in carriersList) {
 						var numbersArray = [],
@@ -1059,13 +1059,6 @@ define(function(require){
 						order.numbers = numbersArray;
 
 						formattedData.orders[carrier] = order;
-					}
-
-					if (errorCount == 1) {
-						toastr.error(self.i18n.active().port.toastr.error.number.single, '', { timeOut: 5000 });
-					}
-					else if (errorCount > 1) {
-						toastr.error(self.i18n.active().port.toastr.error.number.multiple, '', { timeOut: 5000 });
 					}
 
 					callback(formattedData);
@@ -1425,7 +1418,9 @@ define(function(require){
 					callbackSuccess && callbackSuccess();
 				},
 				error: function(data, status) {
-					callbackError && callbackError();
+					if (parseInt(data.error, 10) !== 402) {
+						callbackError && callbackError();
+					}
 				}
 			});
 		},
